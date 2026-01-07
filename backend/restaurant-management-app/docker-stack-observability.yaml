@@ -1,0 +1,65 @@
+version: '3.8'
+
+services:
+  loki:
+    image: grafana/loki:2.9.1
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - ./loki-data:/loki
+    networks:
+      - observability-net
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  promtail:
+    image: grafana/promtail:2.9.1
+    volumes:
+      - /var/log:/var/log
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+    command: -config.file=/etc/promtail/config.yaml
+    networks:
+      - observability-net
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  grafana:
+    image: grafana/grafana:10.3.1
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - loki
+    networks:
+      - observability-net
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  dummy-logger:
+    image: alpine
+    command: sh -c "while true; do echo 'container log from dummy' >> /var/log/dummy.log; sleep 5; done"
+    volumes:
+      - /var/log:/var/log
+    networks:
+      - observability-net
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+networks:
+  observability-net:
+    driver: overlay
+
+volumes:
+  grafana-data:
+  loki-data:

@@ -1,0 +1,37 @@
+import { OnModuleInit } from '@nestjs/common';
+import { ClientKafka } from '@nestjs/microservices';
+import { OrderEvent, DineInOrderCreatedEvent, BatchSentToKitchenEvent, ItemStatusChangedEvent, PaymentRequestedEvent, DineInCompletedEvent, TakeawayOrderCreatedEvent, KitchenAcceptTakeawayEvent, KitchenPreparingTakeawayEvent, KitchenReadyTakeawayEvent, CustomerPickupTakeawayEvent } from '@rm/common';
+export declare class KafkaService implements OnModuleInit {
+    private readonly kafkaClient;
+    constructor(kafkaClient: ClientKafka);
+    onModuleInit(): Promise<void>;
+    emit(topic: string, event: any): Promise<void>;
+    emitOrderEvent(event: OrderEvent): Promise<void>;
+    emitNewOrder(event: OrderEvent): Promise<void>;
+    emitOrderCancelled(event: OrderEvent): Promise<void>;
+    emitOrderConfirmed(event: OrderEvent): Promise<void>;
+    emitKitchenAccepted(event: OrderEvent): Promise<void>;
+    emitPreparing(event: OrderEvent): Promise<void>;
+    emitReady(event: OrderEvent): Promise<void>;
+    emitWaiterAccepted(event: OrderEvent): Promise<void>;
+    emitServed(event: OrderEvent): Promise<void>;
+    emitCompleted(event: OrderEvent): Promise<void>;
+    emitReadyForDelivery(event: OrderEvent): Promise<void>;
+    emitDriverAccepted(event: OrderEvent): Promise<void>;
+    emitPickedUp(event: OrderEvent): Promise<void>;
+    emitDelivered(event: OrderEvent): Promise<void>;
+    emitDineInCreated(event: DineInOrderCreatedEvent): Promise<void>;
+    emitBatchSentToKitchen(event: BatchSentToKitchenEvent): Promise<void>;
+    emitItemStatusChanged(event: ItemStatusChangedEvent): Promise<void>;
+    emitPaymentRequested(event: PaymentRequestedEvent): Promise<void>;
+    emitDineInCompleted(event: DineInCompletedEvent): Promise<void>;
+    emitDeliveryOrderCreated(event: any): Promise<void>;
+    emitTakeawayOrderCreated(event: any): Promise<void>;
+    emitOrderDelivered(event: any): Promise<void>;
+    emitOrderCompleted(event: any): Promise<void>;
+    emitTakeawayOrderCreatedEvent(event: TakeawayOrderCreatedEvent): Promise<void>;
+    emitKitchenAcceptTakeaway(event: KitchenAcceptTakeawayEvent): Promise<void>;
+    emitKitchenPreparingTakeaway(event: KitchenPreparingTakeawayEvent): Promise<void>;
+    emitKitchenReadyTakeaway(event: KitchenReadyTakeawayEvent): Promise<void>;
+    emitCustomerPickupTakeaway(event: CustomerPickupTakeawayEvent): Promise<void>;
+}

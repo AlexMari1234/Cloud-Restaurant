@@ -1,0 +1,84 @@
+_format_version: "3.0"
+services:
+  - name: auth-service
+    url: http://auth-service:3000
+    routes:
+      - name: auth-route
+        paths:
+          - /auth
+        strip_path: false
+      - name: pending-role-requests-route
+        paths:
+          - /pending-role-requests
+        strip_path: false
+      - name: users-route
+        paths:
+          - /users
+        strip_path: false
+
+  - name: restaurant-service
+    url: http://restaurant-service:3001
+    routes:
+      - name: restaurants-route
+        paths:
+          - /restaurants
+        strip_path: false
+
+  - name: reservations-service
+    url: http://reservations-service:3002
+    routes:
+      - name: reservations-route
+        paths:
+          - /reservations
+        strip_path: false
+
+  - name: menu-order-service
+    url: http://menu-order-service:3003
+    routes:
+      - name: menu-route
+        paths:
+          - /menu
+        strip_path: false
+      - name: orders-route
+        paths:
+          - /orders
+        strip_path: false
+      - name: cart-route
+        paths:
+          - /cart
+        strip_path: false
+
+  - name: websocket-gateway
+    url: http://websocket-gateway:3005
+    routes:
+      - name: websocket-route
+        paths:
+          - /kitchen
+        strip_path: false
+        protocols:
+          - http
+          - https
+
+  - name: ml-service
+    url: http://ml-service:3004
+    routes:
+      - name: ml-predictions-route
+        paths:
+          - /ml/predict
+        strip_path: false
+      - name: ml-promotions-route
+        paths:
+          - /ml/promotions
+        strip_path: false
+      - name: ml-analytics-route
+        paths:
+          - /ml/analytics
+        strip_path: false
+      - name: ml-visualizations-route
+        paths:
+          - /ml/visualizations
+        strip_path: false
+      - name: ml-health-route
+        paths:
+          - /ml/health
+        strip_path: false

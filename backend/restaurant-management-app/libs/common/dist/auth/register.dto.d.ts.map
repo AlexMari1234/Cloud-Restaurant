@@ -1,0 +1,1 @@
+{"version":3,"file":"register.dto.d.ts","sourceRoot":"","sources":["../../src/auth/register.dto.ts"],"names":[],"mappings":"AAEA,qBAAa,eAAe;IAE1B,IAAI,EAAE,MAAM,CAAC;IAGb,KAAK,EAAE,MAAM,CAAC;IAGd,QAAQ,EAAE,MAAM,CAAC;IAGjB,QAAQ,EAAE,MAAM,CAAC;IAIjB,aAAa,CAAC,EAAE,SAAS,GAAG,UAAU,CAAC;CACxC"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"create-table.dto.d.ts","sourceRoot":"","sources":["../../src/restaurants/create-table.dto.ts"],"names":[],"mappings":"AAYA,qBAAa,cAAc;IAGzB,MAAM,EAAE,MAAM,CAAC;IAIf,QAAQ,EAAE,MAAM,CAAC;IAGjB,IAAI,EAAE,QAAQ,GAAG,SAAS,GAAG,KAAK,CAAC;IAKnC,eAAe,CAAC,EAAE,MAAM,EAAE,CAAC;IAK3B,kBAAkB,CAAC,EAAE,MAAM,CAAC;IAK5B,kBAAkB,CAAC,EAAE,MAAM,CAAC;CAC7B"}

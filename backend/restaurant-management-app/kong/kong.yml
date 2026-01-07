@@ -1,0 +1,34 @@
+_format_version: "3.0"
+
+services:
+  - name: auth-service
+    url: http://auth-service:3000
+    routes:
+      - name: auth-route
+        paths:
+          - /auth
+        strip_path: false
+      - name: users-route
+        paths:
+          - /users
+        strip_path: false
+      - name: pending-role-requests-route
+        paths:
+          - /pending-role-requests
+        strip_path: false
+
+  - name: restaurant-service
+    url: http://restaurant-service:3000
+    routes:
+      - name: restaurant-route
+        paths:
+          - /restaurants
+        strip_path: false
+
+  - name: reservation-service
+    url: http://reservation-service:3000
+    routes:
+      - name: reservation-route
+        paths:
+          - /reservations
+        strip_path: false
