@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: reservations-service
+  namespace: restaurant-app
+  labels:
+    app: reservations-service
+spec:
+  type: NodePort
+  ports:
+  - port: 3002
+    targetPort: 3002
+    protocol: TCP
+    name: http
+    nodePort: 30002  # Accesibil prin port-forward la localhost:3002
+  selector:
+    app: reservations-service
+

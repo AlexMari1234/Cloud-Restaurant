@@ -1,0 +1,188 @@
+# Default values for restaurant-app
+# This is a YAML-formatted file.
+
+namespace:
+  name: restaurant-app
+  create: true
+
+# MongoDB Configuration
+mongodb:
+  enabled: true
+  image:
+    repository: mongo
+    tag: "7.0"
+  storage:
+    size: 10Gi
+    storageClass: standard  # Change to your storage class (e.g., local-path for Kind)
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "500m"
+  credentials:
+    username: admin
+    password: admin123
+
+# MongoDB Express Configuration
+mongoExpress:
+  enabled: true
+  image:
+    repository: mongo-express
+    tag: "1.0.2"
+  service:
+    type: NodePort
+    nodePort: 30081
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Portainer Configuration
+portainer:
+  enabled: true
+  image:
+    repository: portainer/portainer-ce
+    tag: latest
+  service:
+    type: NodePort
+    httpNodePort: 30090
+    httpsNodePort: 30443
+  storage:
+    size: 1Gi
+    storageClass: standard
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+# Kafka Configuration
+kafka:
+  enabled: true
+  image:
+    repository: confluentinc/cp-kafka
+    tag: "7.4.0"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "300m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+# Zookeeper Configuration
+zookeeper:
+  enabled: true
+  image:
+    repository: confluentinc/cp-zookeeper
+    tag: "7.4.0"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Auth Service Configuration
+authService:
+  enabled: true
+  image:
+    repository: restaurant-auth-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    type: NodePort
+    nodePort: 30000
+  port: 3000
+  database:
+    name: auth_db
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Restaurant Service Configuration
+restaurantService:
+  enabled: true
+  image:
+    repository: restaurant-restaurant-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    type: NodePort
+    nodePort: 30001
+  port: 3001
+  database:
+    name: restaurant_db
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Reservations Service Configuration
+reservationsService:
+  enabled: true
+  image:
+    repository: restaurant-reservations-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    type: NodePort
+    nodePort: 30002
+  port: 3002
+  database:
+    name: reservations_db
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Menu Order Service Configuration
+menuOrderService:
+  enabled: true
+  image:
+    repository: restaurant-menu-order-service
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicas: 1
+  service:
+    type: NodePort
+    nodePort: 30003
+  port: 3003
+  database:
+    name: menu_order_db
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Global Configuration
+global:
+  dbHost: mongodb
+  dbPort: "27017"
+  dbUser: admin
+  kafkaBroker: "kafka:29092"
+

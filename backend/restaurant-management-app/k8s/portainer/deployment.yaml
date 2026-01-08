@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: portainer
+  namespace: restaurant-app
+  labels:
+    app: portainer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: portainer
+  template:
+    metadata:
+      labels:
+        app: portainer
+    spec:
+      containers:
+      - name: portainer
+        image: portainer/portainer-ce:latest
+        ports:
+        - containerPort: 9000
+          name: http
+        - containerPort: 9443
+          name: https
+        volumeMounts:
+        - name: portainer-data
+          mountPath: /data
+        # Docker socket mount removed for Kind/Minikube - Portainer will use Kubernetes API
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+      volumes:
+      - name: portainer-data
+        persistentVolumeClaim:
+          claimName: portainer-pvc
+      # Docker socket volume removed for Kind/Minikube compatibility
+

@@ -1,0 +1,66 @@
+{{- if .Values.mongoExpress.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongo-express
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: mongo-express
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mongo-express
+  template:
+    metadata:
+      labels:
+        app: mongo-express
+    spec:
+      containers:
+      - name: mongo-express
+        image: "{{ .Values.mongoExpress.image.repository }}:{{ .Values.mongoExpress.image.tag }}"
+        ports:
+        - containerPort: 8081
+          name: http
+        env:
+        - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: username
+        - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        - name: ME_CONFIG_MONGODB_URL
+          value: "mongodb://$(ME_CONFIG_MONGODB_ADMINUSERNAME):$(ME_CONFIG_MONGODB_ADMINPASSWORD)@mongodb:27017/"
+        - name: ME_CONFIG_BASICAUTH_USERNAME
+          value: admin
+        - name: ME_CONFIG_BASICAUTH_PASSWORD
+          value: admin123
+        resources:
+          {{- toYaml .Values.mongoExpress.resources | nindent 10 }}
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongo-express
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: mongo-express
+spec:
+  type: {{ .Values.mongoExpress.service.type }}
+  ports:
+  - port: 8081
+    targetPort: 8081
+    protocol: TCP
+    name: http
+    {{- if eq .Values.mongoExpress.service.type "NodePort" }}
+    nodePort: {{ .Values.mongoExpress.service.nodePort }}
+    {{- end }}
+  selector:
+    app: mongo-express
+{{- end }}
+

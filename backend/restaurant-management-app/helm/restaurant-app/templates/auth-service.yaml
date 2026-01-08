@@ -1,0 +1,93 @@
+{{- if .Values.authService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: auth-service
+spec:
+  replicas: {{ .Values.authService.replicas }}
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+      - name: auth-service
+        image: "{{ .Values.authService.image.repository }}:{{ .Values.authService.image.tag }}"
+        imagePullPolicy: {{ .Values.authService.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.authService.port }}
+          name: http
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_PORT
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: auth-service-config
+              key: DB_NAME
+        - name: MONGODB_URI
+          valueFrom:
+            configMapKeyRef:
+              name: auth-service-config
+              key: MONGODB_URI
+        resources:
+          {{- toYaml .Values.authService.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.authService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.authService.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: auth-service
+spec:
+  type: {{ .Values.authService.service.type }}
+  ports:
+  - port: {{ .Values.authService.port }}
+    targetPort: {{ .Values.authService.port }}
+    protocol: TCP
+    name: http
+    {{- if eq .Values.authService.service.type "NodePort" }}
+    nodePort: {{ .Values.authService.service.nodePort }}
+    {{- end }}
+  selector:
+    app: auth-service
+{{- end }}
+

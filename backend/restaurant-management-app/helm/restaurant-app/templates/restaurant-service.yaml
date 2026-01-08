@@ -1,0 +1,98 @@
+{{- if .Values.restaurantService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: restaurant-service
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: restaurant-service
+spec:
+  replicas: {{ .Values.restaurantService.replicas }}
+  selector:
+    matchLabels:
+      app: restaurant-service
+  template:
+    metadata:
+      labels:
+        app: restaurant-service
+    spec:
+      containers:
+      - name: restaurant-service
+        image: "{{ .Values.restaurantService.image.repository }}:{{ .Values.restaurantService.image.tag }}"
+        imagePullPolicy: {{ .Values.restaurantService.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.restaurantService.port }}
+          name: http
+        env:
+        - name: KAFKA_BROKER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: KAFKA_BROKER
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_PORT
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: restaurant-service-config
+              key: DB_NAME
+        - name: MONGODB_URI
+          valueFrom:
+            configMapKeyRef:
+              name: restaurant-service-config
+              key: MONGODB_URI
+        resources:
+          {{- toYaml .Values.restaurantService.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.restaurantService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.restaurantService.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: restaurant-service
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: restaurant-service
+spec:
+  type: {{ .Values.restaurantService.service.type }}
+  ports:
+  - port: {{ .Values.restaurantService.port }}
+    targetPort: {{ .Values.restaurantService.port }}
+    protocol: TCP
+    name: http
+    {{- if eq .Values.restaurantService.service.type "NodePort" }}
+    nodePort: {{ .Values.restaurantService.service.nodePort }}
+    {{- end }}
+  selector:
+    app: restaurant-service
+{{- end }}
+

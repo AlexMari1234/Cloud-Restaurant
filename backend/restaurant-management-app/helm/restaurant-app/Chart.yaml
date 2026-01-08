@@ -1,0 +1,14 @@
+apiVersion: v2
+name: restaurant-app
+description: A Helm chart for Restaurant Management Application with microservices
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+keywords:
+  - restaurant
+  - microservices
+  - mongodb
+  - kafka
+maintainers:
+  - name: Restaurant Team
+

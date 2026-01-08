@@ -1,0 +1,51 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: restaurant-app
+data:
+  DB_HOST: "mongodb"
+  DB_PORT: "27017"
+  DB_USER: "admin"
+  KAFKA_BROKER: "kafka:29092"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-service-config
+  namespace: restaurant-app
+data:
+  DB_NAME: "auth_db"
+  MONGODB_URI: "mongodb://admin:admin123@mongodb:27017/auth_db?authSource=admin"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: restaurant-service-config
+  namespace: restaurant-app
+data:
+  DB_NAME: "restaurant_db"
+  MONGODB_URI: "mongodb://admin:admin123@mongodb:27017/restaurant_db?authSource=admin"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: reservations-service-config
+  namespace: restaurant-app
+data:
+  DB_NAME: "reservations_db"
+  MONGODB_URI: "mongodb://admin:admin123@mongodb:27017/reservations_db?authSource=admin"
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: menu-order-service-config
+  namespace: restaurant-app
+data:
+  DB_NAME: "menu_order_db"
+  MONGODB_URI: "mongodb://admin:admin123@mongodb:27017/menu_order_db?authSource=admin"
+

@@ -1,0 +1,93 @@
+{{- if .Values.reservationsService.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reservations-service
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: reservations-service
+spec:
+  replicas: {{ .Values.reservationsService.replicas }}
+  selector:
+    matchLabels:
+      app: reservations-service
+  template:
+    metadata:
+      labels:
+        app: reservations-service
+    spec:
+      containers:
+      - name: reservations-service
+        image: "{{ .Values.reservationsService.image.repository }}:{{ .Values.reservationsService.image.tag }}"
+        imagePullPolicy: {{ .Values.reservationsService.image.pullPolicy }}
+        ports:
+        - containerPort: {{ .Values.reservationsService.port }}
+          name: http
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_HOST
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_PORT
+        - name: DB_USER
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mongodb-secret
+              key: password
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: reservations-service-config
+              key: DB_NAME
+        - name: MONGODB_URI
+          valueFrom:
+            configMapKeyRef:
+              name: reservations-service-config
+              key: MONGODB_URI
+        resources:
+          {{- toYaml .Values.reservationsService.resources | nindent 10 }}
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.reservationsService.port }}
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: {{ .Values.reservationsService.port }}
+          initialDelaySeconds: 10
+          periodSeconds: 5
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: reservations-service
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: reservations-service
+spec:
+  type: {{ .Values.reservationsService.service.type }}
+  ports:
+  - port: {{ .Values.reservationsService.port }}
+    targetPort: {{ .Values.reservationsService.port }}
+    protocol: TCP
+    name: http
+    {{- if eq .Values.reservationsService.service.type "NodePort" }}
+    nodePort: {{ .Values.reservationsService.service.nodePort }}
+    {{- end }}
+  selector:
+    app: reservations-service
+{{- end }}
+
