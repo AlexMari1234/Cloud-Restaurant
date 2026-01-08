@@ -50,6 +50,58 @@ services:
 
 
 
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+      # Note: MongoDB creates databases on first use, so we don't need to initialize all databases here
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    networks:
+      - kong-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: mongo-express
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: admin123
+      ME_CONFIG_MONGODB_URL: mongodb://admin:admin123@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin123
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - kong-net
+    restart: unless-stopped
+
+  portainer:
+    image: portainer/portainer-ce:latest
+    container_name: portainer
+    ports:
+      - "9000:9000"
+      - "9443:9443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - portainer_data:/data
+    networks:
+      - kong-net
+    restart: unless-stopped
+
   kong:
     image: kong:3.4
     container_name: kong
@@ -75,10 +127,21 @@ services:
       context: .
       dockerfile: ./services/auth-service/Dockerfile
     container_name: auth-service
+    environment:
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: auth_db
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/auth_db?authSource=admin
     ports:
       - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
     networks:
       - kong-net
+    restart: unless-stopped
 
   restaurant-service:
     build:
@@ -87,24 +150,43 @@ services:
     container_name: restaurant-service
     environment:
       KAFKA_BROKER: "kafka:29092"
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: restaurant_db
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/restaurant_db?authSource=admin
     ports:
       - "3001:3001"
     depends_on:
       kafka:
         condition: service_healthy
+      mongodb:
+        condition: service_healthy
     networks:
       - kong-net
-    restart: on-failure
+    restart: unless-stopped
 
   reservations-service:
     build:
       context: .
       dockerfile: ./services/reservations-service/Dockerfile
     container_name: reservations-service
+    environment:
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: reservations_db
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/reservations_db?authSource=admin
     ports:
       - "3002:3002"
+    depends_on:
+      mongodb:
+        condition: service_healthy
     networks:
       - kong-net
+    restart: unless-stopped
 
   menu-order-service:
     build:
@@ -113,14 +195,22 @@ services:
     container_name: menu-order-service
     environment:
       KAFKA_BROKER: "kafka:29092"
+      DB_HOST: mongodb
+      DB_PORT: 27017
+      DB_USER: admin
+      DB_PASSWORD: admin123
+      DB_NAME: menu_order_db
+      MONGODB_URI: mongodb://admin:admin123@mongodb:27017/menu_order_db?authSource=admin
     ports:
       - "3003:3003"
     depends_on:
       kafka:
         condition: service_healthy
+      mongodb:
+        condition: service_healthy
     networks:
       - kong-net
-    restart: on-failure
+    restart: unless-stopped
 
   websocket-gateway:
     build:
@@ -140,6 +230,14 @@ services:
       - kong-net
     restart: on-failure
 
+
+volumes:
+  mongodb_data:
+    driver: local
+  mongodb_config:
+    driver: local
+  portainer_data:
+    driver: local
 
 networks:
   kong-net:
