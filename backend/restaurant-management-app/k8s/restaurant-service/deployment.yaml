@@ -63,22 +63,29 @@ spec:
             memory: "256Mi"
             cpu: "200m"
           limits:
-            memory: "512Mi"
+            memory: "768Mi"
             cpu: "500m"
         livenessProbe:
           httpGet:
             path: /health
             port: 3001
-          initialDelaySeconds: 150
+          initialDelaySeconds: 180
           periodSeconds: 30
           timeoutSeconds: 10
           failureThreshold: 5
         readinessProbe:
           tcpSocket:
             port: 3001
-          initialDelaySeconds: 120
+          initialDelaySeconds: 180
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 10
+          failureThreshold: 15
       restartPolicy: Always
+      initContainers:
+      - name: wait-for-mongodb
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
+      - name: wait-for-kafka
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z kafka-cluster 29092; do echo waiting for kafka; sleep 2; done;']
 

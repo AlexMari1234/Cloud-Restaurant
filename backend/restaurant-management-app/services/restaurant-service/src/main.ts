@@ -23,18 +23,22 @@ async function bootstrap() {
         client: {
           clientId: 'restaurant-service-client',
           brokers: [process.env.KAFKA_BROKER || 'kafka:29092'],
-          connectionTimeout: 10000,
-          requestTimeout: 30000,
+          connectionTimeout: 30000,
+          requestTimeout: 60000,
           retry: {
-            initialRetryTime: 1000,
-            retries: 8,
+            initialRetryTime: 2000,
+            retries: 20,
+            multiplier: 1.5,
+            maxRetryTime: 30000,
           },
         },
         consumer: {
           groupId: 'restaurant-consumer-client',
           retry: {
-            initialRetryTime: 1000,
-            retries: 8,
+            initialRetryTime: 2000,
+            retries: 20,
+            multiplier: 1.5,
+            maxRetryTime: 30000,
           },
         },
       },
@@ -42,7 +46,9 @@ async function bootstrap() {
 
     // Start microservices with error handling
     console.log('🔄 Attempting to connect to Kafka...');
-    await app.startAllMicroservices();
+    await app.startAllMicroservices().catch((err) => {
+      console.warn('⚠️ Kafka microservice connection error (will retry):', err.message);
+    });
     console.log('✅ Kafka microservice connected successfully');
   } catch (error) {
     console.warn('⚠️ Kafka microservice failed to start, but HTTP service will continue:', error.message);

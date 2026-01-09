@@ -7,7 +7,7 @@ data:
   DB_HOST: "mongodb"
   DB_PORT: "27017"
   DB_USER: "admin"
-  KAFKA_BROKER: "kafka:29092"
+  KAFKA_BROKER: "kafka-cluster:29092"
 
 ---
 apiVersion: v1
