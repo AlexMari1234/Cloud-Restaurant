@@ -120,3 +120,4 @@ Write-Host ""
 Write-Host "=== Gata! ===" -ForegroundColor Cyan
 Write-Host "Pentru a vedea toate pod-urile: kubectl get pods -n $namespace" -ForegroundColor Gray
 
+

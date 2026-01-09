@@ -162,3 +162,4 @@ După instalarea Kind:
    .\scripts\full-deploy.ps1
    ```
 
+

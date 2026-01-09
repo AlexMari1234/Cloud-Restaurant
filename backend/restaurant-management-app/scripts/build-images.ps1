@@ -26,3 +26,4 @@ Write-Host "=== Build complet! ===" -ForegroundColor Green
 Write-Host "Imagini create:"
 docker images | Select-String "restaurant-"
 
+

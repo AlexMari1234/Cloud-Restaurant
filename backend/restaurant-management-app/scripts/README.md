@@ -143,3 +143,4 @@ kubectl get svc -n restaurant-app
 kubectl port-forward -n restaurant-app svc/auth-service 3000:3000
 ```
 
+

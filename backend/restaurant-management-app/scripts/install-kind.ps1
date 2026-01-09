@@ -123,3 +123,4 @@ if (Test-Path $kindExe) {
     Write-Host "EROARE: Kind nu a fost instalat!" -ForegroundColor Red
 }
 
+

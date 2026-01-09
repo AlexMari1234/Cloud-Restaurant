@@ -39,3 +39,4 @@ Write-Host ""
 Write-Host "Pentru verificare detaliată, rulează:" -ForegroundColor Yellow
 Write-Host "  .\scripts\check-pods.ps1" -ForegroundColor Cyan
 
+

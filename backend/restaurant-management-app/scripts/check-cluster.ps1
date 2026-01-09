@@ -111,3 +111,4 @@ Write-Host "Cluster este gata pentru deploy!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Rulează deploy cu: .\scripts\full-deploy.ps1" -ForegroundColor Cyan
 
+

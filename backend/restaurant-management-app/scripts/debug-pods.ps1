@@ -66,3 +66,4 @@ if ($kafkaPod -and -not ($kafkaPod -match "Error")) {
 Write-Host ""
 Write-Host "=== Debug Complet ===" -ForegroundColor Green
 
+

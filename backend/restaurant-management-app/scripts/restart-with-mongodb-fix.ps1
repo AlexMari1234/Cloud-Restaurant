@@ -140,3 +140,4 @@ Write-Host "=== Gata! ===" -ForegroundColor Cyan
 Write-Host "Pentru a monitoriza statusul in timp real:" -ForegroundColor Yellow
 Write-Host "  kubectl get pods -n $namespace -w" -ForegroundColor Gray
 
+

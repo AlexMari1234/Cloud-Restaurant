@@ -49,3 +49,4 @@ data:
   DB_NAME: {{ .Values.menuOrderService.database.name | quote }}
   MONGODB_URI: "mongodb://{{ .Values.global.dbUser }}:{{ .Values.mongodb.credentials.password }}@{{ .Values.global.dbHost }}:{{ .Values.global.dbPort }}/{{ .Values.menuOrderService.database.name }}?authSource=admin"
 
+

@@ -50,3 +50,4 @@ Write-Host ""
 Write-Host "Pentru detalii despre un pod: kubectl describe pod -n restaurant-app <pod-name>" -ForegroundColor Cyan
 Write-Host "Pentru loguri: kubectl logs -n restaurant-app <pod-name>" -ForegroundColor Cyan
 
+

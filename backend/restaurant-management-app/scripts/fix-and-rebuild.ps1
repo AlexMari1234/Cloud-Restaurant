@@ -90,3 +90,4 @@ Write-Host "Daca pod-urile nu sunt ready, verifica logurile cu:" -ForegroundColo
 Write-Host "  .\scripts\debug-pods.ps1" -ForegroundColor Cyan
 Write-Host ""
 
+

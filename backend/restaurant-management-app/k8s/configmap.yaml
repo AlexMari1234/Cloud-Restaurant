@@ -49,3 +49,4 @@ data:
   DB_NAME: "menu_order_db"
   MONGODB_URI: "mongodb://admin:admin123@mongodb:27017/menu_order_db?authSource=admin"
 
+

@@ -11,3 +11,4 @@ spec:
       storage: 10Gi
   storageClassName: standard  # Schimbă cu storage class-ul tău (ex: local-path pentru Kind)
 
+

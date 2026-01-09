@@ -97,7 +97,7 @@ Write-Host ""
 Write-Host "=== [3/6] Applying Updated Deployments ===" -ForegroundColor Green
 cd $K8S_DIR
 
-Write-Host "Updating MongoDB deployment (cu health checks fixate)..." -ForegroundColor Yellow
+Write-Host "Updating MongoDB deployment..." -ForegroundColor Yellow
 kubectl apply -f mongodb/deployment.yaml
 
 Write-Host "Updating auth-service deployment..." -ForegroundColor Yellow
@@ -112,15 +112,35 @@ kubectl apply -f reservations-service/deployment.yaml
 Write-Host "Updating menu-order-service deployment..." -ForegroundColor Yellow
 kubectl apply -f menu-order-service/deployment.yaml
 
-# Aplica si celelalte deployment-uri (kafka, zookeeper, mongo-express, portainer) daca exista
+# --- FIX KAFKA START ---
 if (Test-Path "kafka/kafka-deployment.yaml") {
-    Write-Host "Updating kafka deployment..." -ForegroundColor Yellow
+    Write-Host "--- APLICARE FIX KAFKA ---" -ForegroundColor Magenta
+    
+    # 1. Stergem explicit serviciul vechi 'kafka' care cauza conflictul de porturi
+    Write-Host "Stergere serviciu vechi 'kafka'..." -ForegroundColor Gray
+    kubectl delete svc kafka -n $NAMESPACE --ignore-not-found=true 2>&1 | Out-Null
+    
+    # 2. Aplicam noul serviciu (kafka-cluster) daca exista fisierul
+    if (Test-Path "kafka/kafka-service.yaml") {
+        Write-Host "Applying kafka-service.yaml..." -ForegroundColor Yellow
+        kubectl apply -f kafka/kafka-service.yaml
+    }
+    
+    # 3. Aplicam deployment-ul
+    Write-Host "Applying kafka-deployment.yaml..." -ForegroundColor Yellow
     kubectl apply -f kafka/kafka-deployment.yaml
 }
+
 if (Test-Path "kafka/zookeeper-deployment.yaml") {
     Write-Host "Updating zookeeper deployment..." -ForegroundColor Yellow
+    # Verificam daca exista si service file pentru zookeeper
+    if (Test-Path "kafka/zookeeper-service.yaml") {
+        kubectl apply -f kafka/zookeeper-service.yaml
+    }
     kubectl apply -f kafka/zookeeper-deployment.yaml
 }
+# --- FIX KAFKA END ---
+
 if (Test-Path "mongo-express/deployment.yaml") {
     Write-Host "Updating mongo-express deployment..." -ForegroundColor Yellow
     kubectl apply -f mongo-express/deployment.yaml
@@ -151,7 +171,7 @@ Write-Host ""
 # 4. Asteapta ca pod-urile sa porneasca
 Write-Host "=== [4/6] Asteptare pod-uri sa porneasca ===" -ForegroundColor Green
 Write-Host "MongoDB necesita ~90 secunde..." -ForegroundColor Yellow
-Write-Host "Microserviciile necesita ~60-90 secunde..." -ForegroundColor Yellow
+Write-Host "Kafka necesita ~60 secunde..." -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Astept initial 30 secunde..." -ForegroundColor Yellow
 Start-Sleep -Seconds 30
@@ -199,7 +219,6 @@ if ($allPods) {
     foreach ($podLine in $allPods) {
         if ($podLine) {
             $podName = ($podLine -split '\s+')[0]
-            # Extrage numele serviciului din numele pod-ului (ex: mongodb-xxx-yyy -> mongodb)
             if ($podName -match '^([a-z-]+)-\w+-\w+$') {
                 $serviceName = $matches[1]
                 if (-not $duplicateServices.ContainsKey($serviceName)) {
@@ -235,4 +254,3 @@ Write-Host ""
 Write-Host "Pentru loguri:" -ForegroundColor Yellow
 Write-Host "  kubectl logs -n $NAMESPACE <pod-name>" -ForegroundColor Cyan
 Write-Host ""
-

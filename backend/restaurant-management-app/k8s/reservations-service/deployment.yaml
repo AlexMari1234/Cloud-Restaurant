@@ -64,17 +64,20 @@ spec:
           httpGet:
             path: /health
             port: 3002
-          initialDelaySeconds: 90
+          initialDelaySeconds: 150
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
+        readinessProbe:
+          tcpSocket:
+            port: 3002
+          initialDelaySeconds: 120
           periodSeconds: 10
           timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /health
-            port: 3002
-          initialDelaySeconds: 60
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
+          failureThreshold: 10
       restartPolicy: Always
+      initContainers:
+      - name: wait-for-mongodb
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
 

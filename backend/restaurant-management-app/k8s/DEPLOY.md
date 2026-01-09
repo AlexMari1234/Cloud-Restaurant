@@ -242,3 +242,4 @@ kubectl describe nodes
 
 4. **Credențiale**: MongoDB folosește `admin/admin123` - pentru producție, folosește Secrets mai sigure
 
+

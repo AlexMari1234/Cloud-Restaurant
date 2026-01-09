@@ -27,3 +27,4 @@ docker build -f services/menu-order-service/Dockerfile -t restaurant-menu-order-
 Write-Host ""
 Write-Host "=== Build complet în Minikube! ===" -ForegroundColor Green
 
+

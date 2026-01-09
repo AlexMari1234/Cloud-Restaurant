@@ -44,3 +44,4 @@ foreach ($pod in $notReadyPods.items) {
 Write-Host ""
 Write-Host "=== Verificare Completă ===" -ForegroundColor Green
 
+

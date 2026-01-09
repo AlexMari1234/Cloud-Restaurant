@@ -15,25 +15,32 @@ spec:
       labels:
         app: kafka
     spec:
+      initContainers:
+      - name: wait-for-zookeeper
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z zookeeper 2181; do echo waiting for zookeeper; sleep 2; done;']
       containers:
       - name: kafka
         image: confluentinc/cp-kafka:7.4.0
         ports:
         - containerPort: 9092
-          name: kafka-external
+          name: kafka-ext
         - containerPort: 29092
-          name: kafka-internal
+          name: kafka-int
         env:
         - name: KAFKA_BROKER_ID
           value: "1"
         - name: KAFKA_ZOOKEEPER_CONNECT
           value: "zookeeper:2181"
-        - name: KAFKA_ADVERTISED_LISTENERS
-          value: "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092"
         - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
           value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
         - name: KAFKA_INTER_BROKER_LISTENER_NAME
           value: "PLAINTEXT"
+        - name: KAFKA_LISTENERS
+          value: "PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092"
+        # AICI am schimbat referinta catre noul service name: kafka-cluster
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://kafka-cluster:29092,PLAINTEXT_HOST://kafka-cluster:9092"
         - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
           value: "1"
         - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
@@ -48,8 +55,9 @@ spec:
           value: "1"
         - name: KAFKA_DEFAULT_REPLICATION_FACTOR
           value: "1"
-        - name: KAFKA_LISTENERS
-          value: "PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092"
+        # FOARTE IMPORTANT: Setam memoria heap Java sa fie mai mica decat limita containerului
+        - name: KAFKA_HEAP_OPTS
+          value: "-Xmx512M -Xms512M"
         resources:
           requests:
             memory: "512Mi"
@@ -62,8 +70,8 @@ spec:
             command:
             - sh
             - -c
-            - "nc -z localhost 29092 || exit 1"
-          initialDelaySeconds: 60
+            - "nc -z localhost 29092"
+          initialDelaySeconds: 120
           periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 10
@@ -72,10 +80,9 @@ spec:
             command:
             - sh
             - -c
-            - "nc -z localhost 29092 || exit 1"
-          initialDelaySeconds: 30
-          periodSeconds: 5
+            - "nc -z localhost 29092"
+          initialDelaySeconds: 60
+          periodSeconds: 10
           timeoutSeconds: 5
           failureThreshold: 10
       restartPolicy: Always
-
