@@ -1,0 +1,29 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: prometheus
+    {{- include "restaurant-app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.prometheus.service.type }}
+  {{- if eq .Values.prometheus.service.type "NodePort" }}
+  ports:
+    - port: 9090
+      targetPort: 9090
+      protocol: TCP
+      name: web
+      nodePort: {{ .Values.prometheus.service.nodePort }}
+  {{- else }}
+  ports:
+    - port: 9090
+      targetPort: 9090
+      protocol: TCP
+      name: web
+  {{- end }}
+  selector:
+    app: prometheus
+{{- end }}
+

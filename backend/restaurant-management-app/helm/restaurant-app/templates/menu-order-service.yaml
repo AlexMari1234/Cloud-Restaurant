@@ -15,6 +15,10 @@ spec:
     metadata:
       labels:
         app: menu-order-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.menuOrderService.port }}"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
       - name: menu-order-service
