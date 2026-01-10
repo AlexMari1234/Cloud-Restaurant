@@ -31,7 +31,9 @@ Write-Host "Scalez toate deployment-urile la 0 pentru a elimina pod-urile duplic
 $deployments = @("mongodb", "auth-service", "restaurant-service", "reservations-service", "menu-order-service", "kafka", "zookeeper", "mongo-express", "portainer")
 
 foreach ($deployment in $deployments) {
+    $ErrorActionPreference = "SilentlyContinue"
     $exists = kubectl get deployment -n $NAMESPACE $deployment -o name 2>$null
+    $ErrorActionPreference = "Stop"
     if ($exists) {
         Write-Host "  Scaling down $deployment..." -ForegroundColor Gray
         kubectl scale deployment -n $NAMESPACE $deployment --replicas=0 2>&1 | Out-Null
