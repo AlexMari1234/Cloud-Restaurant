@@ -137,10 +137,12 @@ if ($releaseCheck) {
     
     # Pentru upgrade, scale down toate deployment-urile pentru a elimina pod-urile duplicate
     Write-Host "Scalez down toate deployment-urile pentru a elimina pod-urile duplicate..." -ForegroundColor Yellow
-    $deployments = @("mongodb", "auth-service", "restaurant-service", "reservations-service", "menu-order-service", "kafka", "zookeeper", "mongo-express", "portainer", "prometheus", "grafana")
+    $deployments = @("mongodb", "auth-service", "restaurant-service", "reservations-service", "menu-order-service", "kafka", "zookeeper", "mongo-express", "portainer", "prometheus", "grafana", "loki")
     
     foreach ($deployment in $deployments) {
+        $ErrorActionPreference = "SilentlyContinue"
         $exists = kubectl get deployment -n $NAMESPACE $deployment -o name 2>$null
+        $ErrorActionPreference = "Stop"
         if ($exists) {
             Write-Host "  Scaling down $deployment..." -ForegroundColor Gray
             kubectl scale deployment -n $NAMESPACE $deployment --replicas=0 2>&1 | Out-Null
@@ -219,10 +221,14 @@ $checkInterval = 15
 while ($elapsed -lt $maxWait) {
     Write-Host ""
     Write-Host "Status după $elapsed secunde:" -ForegroundColor Cyan
+    
+    $ErrorActionPreference = "SilentlyContinue"
+    kubectl get pods -n $NAMESPACE 2>&1 | Out-Null
     kubectl get pods -n $NAMESPACE
     
-    $readyPods = kubectl get pods -n $NAMESPACE --field-selector=status.phase=Running --no-headers 2>&1 | Where-Object { $_ -match '1/1|2/2|3/3' }
-    $totalPods = kubectl get pods -n $NAMESPACE --no-headers 2>&1 | Where-Object { $_ -notmatch 'Completed' }
+    $readyPods = kubectl get pods -n $NAMESPACE --field-selector=status.phase=Running --no-headers 2>&1 | Where-Object { $_ -match '1/1|2/2|3/3' -and $_ -notmatch 'No resources' }
+    $totalPods = kubectl get pods -n $NAMESPACE --no-headers 2>&1 | Where-Object { $_ -notmatch 'Completed' -and $_ -notmatch 'No resources' -and $_ -notmatch 'Terminating' }
+    $ErrorActionPreference = "Stop"
     
     if ($readyPods -and $totalPods) {
         $readyCount = ($readyPods | Measure-Object).Count
@@ -234,6 +240,8 @@ while ($elapsed -lt $maxWait) {
             Write-Host "Toate pod-urile sunt Ready!" -ForegroundColor Green
             break
         }
+    } else {
+        Write-Host "Aștept ca pod-urile să fie create..." -ForegroundColor Gray
     }
     
     Write-Host "Aștept încă $checkInterval secunde..." -ForegroundColor Yellow
@@ -251,20 +259,24 @@ Write-Host ""
 
 # Informații despre accesare
 Write-Host "=== Informații Accesare ===" -ForegroundColor Green
-$nodeIP = kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].value}' 2>&1
-if ($LASTEXITCODE -eq 0 -and $nodeIP) {
-    Write-Host "Servicii disponibile prin NodePort (IP: $nodeIP):" -ForegroundColor Cyan
-    Write-Host "  Prometheus:  http://$nodeIP`:30091" -ForegroundColor White
-    Write-Host "  Grafana:     http://$nodeIP`:30300 (admin/admin123)" -ForegroundColor White
-    Write-Host "  Auth Service: http://$nodeIP`:30000" -ForegroundColor White
-    Write-Host "  Restaurant:  http://$nodeIP`:30001" -ForegroundColor White
-    Write-Host "  Reservations: http://$nodeIP`:30002" -ForegroundColor White
-    Write-Host "  Menu Order:  http://$nodeIP`:30003" -ForegroundColor White
-    Write-Host "  Mongo Express: http://$nodeIP`:30081" -ForegroundColor White
-    Write-Host "  Portainer:   http://$nodeIP`:30090" -ForegroundColor White
-} else {
-    Write-Host "Nu s-a putut obține Node IP." -ForegroundColor Yellow
+$ErrorActionPreference = "SilentlyContinue"
+$nodeIP = kubectl get nodes -o jsonpath="{.items[0].status.addresses[?(@.type=='InternalIP')].address}" 2>&1
+if ($LASTEXITCODE -ne 0 -or -not $nodeIP) {
+    # Încercăm localhost pentru Kind
+    $nodeIP = "localhost"
 }
+$ErrorActionPreference = "Stop"
+
+Write-Host "Servicii disponibile prin NodePort (IP: $nodeIP):" -ForegroundColor Cyan
+Write-Host "  Prometheus:  http://$nodeIP`:30091" -ForegroundColor White
+Write-Host "  Grafana:     http://$nodeIP`:30300 (admin/admin123)" -ForegroundColor White
+Write-Host "    - Loki disponibil ca data source in Grafana (Explore > Loki)" -ForegroundColor Gray
+Write-Host "  Auth Service: http://$nodeIP`:30000" -ForegroundColor White
+Write-Host "  Restaurant:  http://$nodeIP`:30001" -ForegroundColor White
+Write-Host "  Reservations: http://$nodeIP`:30002" -ForegroundColor White
+Write-Host "  Menu Order:  http://$nodeIP`:30003" -ForegroundColor White
+Write-Host "  Mongo Express: http://$nodeIP`:30081" -ForegroundColor White
+Write-Host "  Portainer:   http://$nodeIP`:30090" -ForegroundColor White
 
 Write-Host ""
 Write-Host '=== Install Complet! ===' -ForegroundColor Green

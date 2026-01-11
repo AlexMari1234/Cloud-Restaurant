@@ -68,5 +68,3 @@ spec:
       - name: mongodb-config
         emptyDir: {}
 {{- end }}
-
-

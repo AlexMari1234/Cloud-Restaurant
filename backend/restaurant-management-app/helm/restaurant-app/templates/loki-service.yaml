@@ -1,0 +1,18 @@
+{{- if .Values.loki.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: loki
+spec:
+  type: {{ .Values.loki.service.type }}
+  ports:
+  - name: http
+    port: {{ .Values.loki.service.port }}
+    targetPort: 3100
+    protocol: TCP
+  selector:
+    app: loki
+{{- end }}
