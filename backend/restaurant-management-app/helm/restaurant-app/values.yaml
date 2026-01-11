@@ -239,7 +239,7 @@ grafana:
     nodePort: 30300
   storage:
     size: 5Gi
-    storageClass: standard  # Change to your storage class (e.g., local-path for Kind)
+    storageClass: standard
   resources:
     requests:
       memory: "256Mi"
@@ -247,6 +247,43 @@ grafana:
     limits:
       memory: "512Mi"
       cpu: "500m"
+
+# Loki Configuration
+loki:
+  enabled: true
+  image:
+    repository: grafana/loki
+    tag: "2.9.3"
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 3100
+  storage:
+    size: 10Gi
+    storageClass: standard
+  retention: 168h  # 7 days
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Promtail Configuration
+promtail:
+  enabled: true
+  image:
+    repository: grafana/promtail
+    tag: "2.9.3"
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "100m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
 
 # Global Configuration
 global:

@@ -1,0 +1,65 @@
+{{- if .Values.loki.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: loki
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+      - name: loki
+        image: {{ .Values.loki.image.repository }}:{{ .Values.loki.image.tag }}
+        imagePullPolicy: {{ .Values.loki.image.pullPolicy }}
+        ports:
+        - containerPort: 3100
+          name: http
+          protocol: TCP
+        - containerPort: 9096
+          name: grpc
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/loki
+        - name: storage
+          mountPath: /loki
+        resources:
+          requests:
+            memory: {{ .Values.loki.resources.requests.memory }}
+            cpu: {{ .Values.loki.resources.requests.cpu }}
+          limits:
+            memory: {{ .Values.loki.resources.limits.memory }}
+            cpu: {{ .Values.loki.resources.limits.cpu }}
+        livenessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 45
+          periodSeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3100
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+        args:
+        - -config.file=/etc/loki/loki.yaml
+      volumes:
+      - name: config
+        configMap:
+          name: loki-config
+      - name: storage
+        persistentVolumeClaim:
+          claimName: loki-storage
+{{- end }}

@@ -137,7 +137,7 @@ if ($releaseCheck) {
     
     # Pentru upgrade, scale down toate deployment-urile pentru a elimina pod-urile duplicate
     Write-Host "Scalez down toate deployment-urile pentru a elimina pod-urile duplicate..." -ForegroundColor Yellow
-    $deployments = @("mongodb", "auth-service", "restaurant-service", "reservations-service", "menu-order-service", "kafka", "zookeeper", "mongo-express", "portainer", "prometheus", "grafana")
+    $deployments = @("mongodb", "auth-service", "restaurant-service", "reservations-service", "menu-order-service", "kafka", "zookeeper", "mongo-express", "portainer", "prometheus", "grafana", "loki")
     
     foreach ($deployment in $deployments) {
         $ErrorActionPreference = "SilentlyContinue"
@@ -270,6 +270,7 @@ $ErrorActionPreference = "Stop"
 Write-Host "Servicii disponibile prin NodePort (IP: $nodeIP):" -ForegroundColor Cyan
 Write-Host "  Prometheus:  http://$nodeIP`:30091" -ForegroundColor White
 Write-Host "  Grafana:     http://$nodeIP`:30300 (admin/admin123)" -ForegroundColor White
+Write-Host "    - Loki disponibil ca data source in Grafana (Explore > Loki)" -ForegroundColor Gray
 Write-Host "  Auth Service: http://$nodeIP`:30000" -ForegroundColor White
 Write-Host "  Restaurant:  http://$nodeIP`:30001" -ForegroundColor White
 Write-Host "  Reservations: http://$nodeIP`:30002" -ForegroundColor White

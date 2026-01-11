@@ -89,6 +89,7 @@ Write-Host ""
 # Monitoring
 Write-Host "=== Monitoring ===" -ForegroundColor Yellow
 Write-Host "  Grafana:             http://localhost:3030 (admin/admin123)" -ForegroundColor White
+Write-Host "    - Loki Logs:       Explore > Select 'Loki' data source" -ForegroundColor Gray
 Write-Host "  Prometheus:          http://localhost:9090" -ForegroundColor White
 Write-Host ""
 
