@@ -11,10 +11,9 @@ metadata:
 data:
   restaurant-app-dashboard.json: |
     {
-      "dashboard": {
-        "id": null,
-        "uid": "restaurant-app",
-        "title": "Restaurant Management App - Monitoring",
+      "id": null,
+      "uid": "restaurant-app",
+      "title": "Restaurant Management App - Monitoring",
         "tags": ["restaurant", "microservices", "kubernetes"],
         "timezone": "browser",
         "schemaVersion": 30,
@@ -409,6 +408,5 @@ data:
         "annotations": {
           "list": []
         }
-      }
     }
 {{- end }}
