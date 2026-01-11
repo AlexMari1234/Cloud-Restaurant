@@ -31,6 +31,8 @@ This application follows a **microservices architecture** with the following ser
 |---------|------|----------|-------------|
 | **Prometheus** | 9090 | 30091 | Metrics collection and monitoring |
 | **Grafana** | 3000 | 30300 | Metrics visualization and dashboards |
+| **Loki** | 3100 | - | Log aggregation and storage |
+| **Promtail** | - | - | Log collection agent (DaemonSet) |
 
 ## Technology Stack
 
@@ -40,6 +42,7 @@ This application follows a **microservices architecture** with the following ser
 - **Container Orchestration:** Kubernetes (Kind/Minikube)
 - **Package Manager:** Helm
 - **Monitoring:** Prometheus + Grafana
+- **Logging:** Loki + Promtail
 - **Containerization:** Docker
 
 ## Features
@@ -49,6 +52,7 @@ This application follows a **microservices architecture** with the following ser
 - **Horizontal Pod Autoscaling:** Auto-scaling based on CPU/Memory usage
 - **Persistent Storage:** PersistentVolumeClaims for databases
 - **Health Monitoring:** Prometheus metrics and Grafana dashboards
+- **Centralized Logging:** Loki for log aggregation with Promtail agents
 - **API Documentation:** Swagger UI available for each service
 
 ## Accessing the Application
@@ -64,6 +68,7 @@ http://localhost:30081  - Mongo Express
 http://localhost:30090  - Portainer
 http://localhost:30091  - Prometheus
 http://localhost:30300  - Grafana (admin/admin123)
+                         Loki logs available in Grafana: Explore > Select "Loki"
 ```
 
 ## Application Overview
@@ -160,6 +165,14 @@ The system uses **Apache Kafka** for asynchronous communication between services
 
 - **Cloud-Native:** Designed for Kubernetes deployment
 - **Scalable:** Horizontal auto-scaling configured for all services
-- **Observable:** Complete monitoring stack with Prometheus + Grafana
+- **Observable:** Complete monitoring stack with Prometheus + Grafana + Loki
 - **Resilient:** Health checks and automatic pod restarts
 - **Developer-Friendly:** Helm charts for easy deployment and upgrades
+
+### Features
+
+- **7-day retention:** Logs stored for 168 hours
+- **Automatic labeling:** Namespace, pod, container, and app labels added automatically
+- **Real-time streaming:** Live log tailing in Grafana
+- **Full-text search:** Search across all logs with LogQL
+- **Persistent storage:** 10Gi PVC for log data
