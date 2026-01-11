@@ -20,6 +20,13 @@ spec:
         prometheus.io/port: "{{ .Values.restaurantService.port }}"
         prometheus.io/path: "/metrics"
     spec:
+      initContainers:
+      - name: wait-for-mongodb
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
+      - name: wait-for-kafka
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z kafka-cluster 29092; do echo waiting for kafka; sleep 2; done;']
       containers:
       - name: restaurant-service
         image: "{{ .Values.restaurantService.image.repository }}:{{ .Values.restaurantService.image.tag }}"
@@ -66,17 +73,19 @@ spec:
         resources:
           {{- toYaml .Values.restaurantService.resources | nindent 10 }}
         livenessProbe:
-          httpGet:
-            path: /health
+          tcpSocket:
             port: {{ .Values.restaurantService.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 180
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
         readinessProbe:
-          httpGet:
-            path: /health
+          tcpSocket:
             port: {{ .Values.restaurantService.port }}
-          initialDelaySeconds: 10
-          periodSeconds: 5
+          initialDelaySeconds: 180
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 15
       restartPolicy: Always
 ---
 apiVersion: v1

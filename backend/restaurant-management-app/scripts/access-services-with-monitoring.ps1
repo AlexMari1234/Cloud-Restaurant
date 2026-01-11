@@ -52,19 +52,20 @@ if ($missingServices.Count -gt 0) {
 Write-Host "Pornind port-forward pentru serviciile disponibile..." -ForegroundColor Green
 Write-Host ""
 
-# Start port-forwarding în background jobs
-$jobs = @()
+# Start port-forwarding în background processes
+$processes = @()
 
 foreach ($svc in $services) {
     $exists = kubectl get svc $svc.Name -n restaurant-app 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Starting port-forward pentru $($svc.Description)..." -ForegroundColor Cyan
         Write-Host "  Local: http://localhost:$($svc.LocalPort) -> $($svc.Name):$($svc.ServicePort)" -ForegroundColor Gray
-        $job = Start-Job -ScriptBlock {
-            param($name, $localPort, $servicePort, $namespace)
-            kubectl port-forward -n $namespace svc/$name $localPort`:$servicePort 2>&1 | Out-Null
-        } -ArgumentList $svc.Name, $svc.LocalPort, $svc.ServicePort, "restaurant-app"
-        $jobs += $job
+        $process = Start-Process -FilePath "kubectl" -ArgumentList "port-forward", "-n", "restaurant-app", "svc/$($svc.Name)", "$($svc.LocalPort):$($svc.ServicePort)" -PassThru -WindowStyle Hidden
+        $processes += @{
+            Process = $process
+            Name = $svc.Name
+            Description = $svc.Description
+        }
         Start-Sleep -Milliseconds 500
     } else {
         Write-Host "Skipping $($svc.Name) - nu există în cluster" -ForegroundColor Yellow
@@ -103,11 +104,15 @@ Write-Host ""
 # Așteaptă input de la utilizator
 Read-Host
 
-# Oprește toate job-urile
+# Oprește toate procesele
 Write-Host ""
 Write-Host "Oprind port-forwarding..." -ForegroundColor Yellow
-$jobs | Stop-Job
-$jobs | Remove-Job
+foreach ($procInfo in $processes) {
+    if (-not $procInfo.Process.HasExited) {
+        Write-Host "  Oprind $($procInfo.Description)..." -ForegroundColor Gray
+        Stop-Process -Id $procInfo.Process.Id -Force -ErrorAction SilentlyContinue
+    }
+}
 
 Write-Host "Port-forwarding oprit." -ForegroundColor Green
 

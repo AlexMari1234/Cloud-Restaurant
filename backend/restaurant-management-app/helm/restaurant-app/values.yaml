@@ -229,6 +229,6 @@ global:
   dbHost: mongodb
   dbPort: "27017"
   dbUser: admin
-  kafkaBroker: "kafka:29092"
+  kafkaBroker: "kafka-cluster:29092"
 
 

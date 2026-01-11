@@ -1,4 +1,4 @@
-# Script pentru instalarea aplicației cu Helm (include Prometheus și Grafana)
+﻿# Script pentru instalarea aplicației cu Helm (include Prometheus și Grafana)
 
 $ErrorActionPreference = "Stop"
 
@@ -14,90 +14,12 @@ Write-Host ""
 Write-Host "Verificare Helm..." -ForegroundColor Yellow
 $helmCheck = Get-Command helm -ErrorAction SilentlyContinue
 if (-not $helmCheck) {
-    Write-Host "Helm nu este instalat!" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "Opțiuni de instalare Helm:" -ForegroundColor Cyan
-    Write-Host ""
-    Write-Host "1. Instalare manuală FĂRĂ admin (recomandat - descarcă binarul direct):" -ForegroundColor Yellow
-    Write-Host "   .\scripts\install-helm-manual.ps1" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "2. Instalare automată (încearcă winget/Chocolatey):" -ForegroundColor Yellow
-    Write-Host "   .\scripts\install-helm.ps1" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "3. Sau instalează manual:" -ForegroundColor Yellow
-    Write-Host "   - winget: winget install Helm.Helm" -ForegroundColor Gray
-    Write-Host "   - Chocolatey (necesită admin): choco install kubernetes-helm" -ForegroundColor Gray
-    Write-Host "   - Manual: https://helm.sh/docs/intro/install/" -ForegroundColor Gray
-    Write-Host ""
-    Write-Host "Recomandare: Folosește opțiunea 1 (install-helm-manual.ps1) - nu necesită admin!" -ForegroundColor Green
-    Write-Host ""
-    $installChoice = Read-Host "Ce metodă vrei să folosesc? (1=manual fără admin, 2=automată, 3=skip) [1]"
-    
-    if ([string]::IsNullOrWhiteSpace($installChoice)) {
-        $installChoice = "1"
-    }
-    
-    if ($installChoice -eq "1") {
-        # Instalare manuală fără admin
-        $installScript = Join-Path $SCRIPT_DIR "install-helm-manual.ps1"
-        if (Test-Path $installScript) {
-            Write-Host ""
-            Write-Host "Rulez instalare manuală Helm (fără admin)..." -ForegroundColor Cyan
-            & $installScript
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "EROARE: Instalarea Helm manuală a eșuat!" -ForegroundColor Red
-                Write-Host "Instalează manual Helm și încearcă din nou." -ForegroundColor Yellow
-                exit 1
-            }
-            # Refresh PATH
-            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","User") + ";" + [System.Environment]::GetEnvironmentVariable("Path","Machine")
-            Start-Sleep -Seconds 2
-            
-            # Verifică din nou
-            $helmCheck = Get-Command helm -ErrorAction SilentlyContinue
-            if (-not $helmCheck) {
-                Write-Host ""
-                Write-Host "ATENȚIE: Helm a fost instalat, dar nu este încă în PATH." -ForegroundColor Yellow
-                Write-Host "Reîncarcă PowerShell și rulează din nou acest script." -ForegroundColor Yellow
-                Write-Host "SAU folosește calea completă: $env:USERPROFILE\.local\bin\helm.exe" -ForegroundColor Cyan
-                exit 1
-            }
-        } else {
-            Write-Host "EROARE: Scriptul install-helm-manual.ps1 nu există!" -ForegroundColor Red
-            exit 1
-        }
-    } elseif ($installChoice -eq "2") {
-        # Instalare automată
-        $installScript = Join-Path $SCRIPT_DIR "install-helm.ps1"
-        if (Test-Path $installScript) {
-            Write-Host ""
-            Write-Host "Rulez scriptul de instalare automată Helm..." -ForegroundColor Cyan
-            & $installScript
-            if ($LASTEXITCODE -ne 0) {
-                Write-Host "EROARE: Instalarea Helm automată a eșuat!" -ForegroundColor Red
-                Write-Host "Încearcă instalarea manuală: .\scripts\install-helm-manual.ps1" -ForegroundColor Yellow
-                exit 1
-            }
-            # Refresh PATH
-            $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
-            Start-Sleep -Seconds 2
-        } else {
-            Write-Host "EROARE: Scriptul install-helm.ps1 nu există!" -ForegroundColor Red
-            exit 1
-        }
-    } else {
-        Write-Host "Skip instalare Helm. Instalează manual și rulează din nou acest script." -ForegroundColor Yellow
-        exit 1
-    }
+    Write-Host "Helm nu este instalat! Te rog instalează-l manual sau rulează scripts/install-helm-manual.ps1" -ForegroundColor Red
+    exit 1
 }
 
 # Verifică versiunea Helm
 $helmVersion = helm version --short 2>&1
-if ($LASTEXITCODE -ne 0) {
-    Write-Host "EROARE: Helm nu funcționează corect!" -ForegroundColor Red
-    Write-Host "Reîncarcă PowerShell și verifică instalarea." -ForegroundColor Yellow
-    exit 1
-}
 Write-Host "Helm: $helmVersion" -ForegroundColor Green
 Write-Host ""
 
@@ -121,9 +43,7 @@ $ErrorActionPreference = "SilentlyContinue"
 $metricsServerCheck = kubectl get deployment -n kube-system metrics-server -o name 2>&1
 $ErrorActionPreference = "Stop"
 if ($LASTEXITCODE -ne 0 -or $metricsServerCheck -match "NotFound" -or $metricsServerCheck -match "not found" -or $metricsServerCheck -match "Error") {
-    Write-Host "Metrics Server nu este instalat!" -ForegroundColor Yellow
-    Write-Host "Instalez Metrics Server..." -ForegroundColor Yellow
-    
+    Write-Host "Metrics Server nu este instalat! Instalez..." -ForegroundColor Yellow
     kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
     
     if ($LASTEXITCODE -eq 0) {
@@ -131,12 +51,7 @@ if ($LASTEXITCODE -ne 0 -or $metricsServerCheck -match "NotFound" -or $metricsSe
         Start-Sleep -Seconds 5
         kubectl patch deployment metrics-server -n kube-system --type='json' -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
         Write-Host "Metrics Server instalat!" -ForegroundColor Green
-        Write-Host "Aștept 10 secunde pentru ca Metrics Server să pornească..." -ForegroundColor Yellow
         Start-Sleep -Seconds 10
-    } else {
-        Write-Host "EROARE: Nu s-a putut instala Metrics Server!" -ForegroundColor Red
-        Write-Host "Poți continua, dar Prometheus ar putea avea probleme cu unele metrici." -ForegroundColor Yellow
-        Read-Host "Apasă Enter pentru a continua sau Ctrl+C pentru a anula"
     }
 } else {
     Write-Host "Metrics Server este deja instalat!" -ForegroundColor Green
@@ -167,27 +82,120 @@ if ($buildImages -eq "y" -or $buildImages -eq "Y") {
 }
 Write-Host ""
 
-# 3. Verifică dacă release-ul Helm există
-Write-Host "=== [3/5] Verificare Release Helm ===" -ForegroundColor Green
+# 3. Verifică namespace și release-ul Helm
+Write-Host "=== [3/5] Verificare Namespace și Release Helm ===" -ForegroundColor Green
 cd $HELM_DIR
-$releaseExists = helm list -n $NAMESPACE -q | Select-String -Pattern "restaurant-app"
-if ($releaseExists) {
-    Write-Host "Release 'restaurant-app' există deja. Fac upgrade..." -ForegroundColor Yellow
+
+# Verifică dacă namespace-ul există
+$ErrorActionPreference = "SilentlyContinue"
+$nsCheck = kubectl get namespace $NAMESPACE -o name 2>&1
+$nsCheckCode = $LASTEXITCODE
+$ErrorActionPreference = "Stop"
+
+if ($nsCheckCode -eq 0 -and ($nsCheck -match $NAMESPACE)) {
+    Write-Host "Namespace '$NAMESPACE' EXISTĂ deja!" -ForegroundColor Yellow
+    
+    # Verificăm dacă e gestionat de Helm
+    $ErrorActionPreference = "SilentlyContinue"
+    $helmLabel = kubectl get namespace $NAMESPACE -o jsonpath='{.metadata.labels.app\.kubernetes\.io/managed-by}' 2>&1
+    $ErrorActionPreference = "Stop"
+    
+    if ($helmLabel -ne "Helm") {
+        Write-Host "ATENȚIE: Namespace-ul există dar NU este gestionat de Helm." -ForegroundColor Red
+        
+        $choice = Read-Host "Șterg namespace-ul vechi pentru a evita conflicte? (y/n) [y]"
+        if ($choice -eq "" -or $choice -eq "y") {
+            Write-Host "Șterg namespace-ul $NAMESPACE..." -ForegroundColor Yellow
+            kubectl delete namespace $NAMESPACE --ignore-not-found=true
+            Write-Host "Aștept ca ștergerea să se finalizeze..." -ForegroundColor Gray
+            
+            # Loop de așteptare pentru ștergere
+            for ($i=0; $i -lt 60; $i++) {
+                $ErrorActionPreference = "SilentlyContinue"
+                $check = kubectl get namespace $NAMESPACE -o name 2>&1
+                $exitCode = $LASTEXITCODE
+                $ErrorActionPreference = "Stop"
+
+                if ($exitCode -ne 0 -or $check -match "NotFound" -or $check -match "not found") { 
+                    break 
+                }
+                Start-Sleep -Seconds 2
+            }
+            Write-Host "Namespace șters." -ForegroundColor Green
+        }
+    }
+}
+
+# Verifică dacă release-ul Helm există
+$ErrorActionPreference = "SilentlyContinue"
+$releaseCheck = helm list -n $NAMESPACE -q 2>&1 | Select-String -Pattern "restaurant-app"
+$ErrorActionPreference = "Stop"
+
+if ($releaseCheck) {
     $operation = "upgrade"
+    Write-Host "Release detectat. Voi face UPGRADE." -ForegroundColor Yellow
+    
+    # Pentru upgrade, scale down toate deployment-urile pentru a elimina pod-urile duplicate
+    Write-Host "Scalez down toate deployment-urile pentru a elimina pod-urile duplicate..." -ForegroundColor Yellow
+    $deployments = @("mongodb", "auth-service", "restaurant-service", "reservations-service", "menu-order-service", "kafka", "zookeeper", "mongo-express", "portainer", "prometheus", "grafana")
+    
+    foreach ($deployment in $deployments) {
+        $exists = kubectl get deployment -n $NAMESPACE $deployment -o name 2>$null
+        if ($exists) {
+            Write-Host "  Scaling down $deployment..." -ForegroundColor Gray
+            kubectl scale deployment -n $NAMESPACE $deployment --replicas=0 2>&1 | Out-Null
+        }
+    }
+    
+    Write-Host "Astept 5 secunde pentru ca pod-urile sa fie terminate..." -ForegroundColor Yellow
+    Start-Sleep -Seconds 5
+    
+    # Verifica si sterge pod-urile ramase (daca exista)
+    Write-Host "Verific pod-uri ramase..." -ForegroundColor Yellow
+    $remainingPods = kubectl get pods -n $NAMESPACE -o jsonpath='{.items[*].metadata.name}' 2>$null
+    if ($remainingPods) {
+        foreach ($pod in $remainingPods -split ' ') {
+            if ($pod) {
+                Write-Host "  Sterg pod ramas: $pod" -ForegroundColor Gray
+                kubectl delete pod -n $NAMESPACE $pod --ignore-not-found=true 2>&1 | Out-Null
+            }
+        }
+        Start-Sleep -Seconds 3
+    }
+    
+    Write-Host "Toate pod-urile au fost eliminate!" -ForegroundColor Green
+    Write-Host ""
 } else {
-    Write-Host "Release 'restaurant-app' nu există. Fac install..." -ForegroundColor Yellow
     $operation = "install"
+    Write-Host "Release inexistent. Voi face INSTALL." -ForegroundColor Yellow
 }
 Write-Host ""
 
 # 4. Instalează/Upgrade cu Helm
 Write-Host "=== [4/5] Helm $operation ===" -ForegroundColor Green
+
 if ($operation -eq "install") {
     Write-Host "Instalare Helm chart..." -ForegroundColor Yellow
-    helm install restaurant-app . -n $NAMESPACE --create-namespace
+    
+    # ---> FIX MAJOR: Pre-creare namespace și etichetare <---
+    Write-Host "1. Asigur namespace-ul '$NAMESPACE'..." -ForegroundColor Gray
+    $ErrorActionPreference = "SilentlyContinue"
+    kubectl create namespace $NAMESPACE 2>&1 | Out-Null
+    $ErrorActionPreference = "Stop"
+    
+    # Adaugăm etichetele Helm manual ca să nu crape la install
+    Write-Host "2. Aplic etichete Helm pe namespace..." -ForegroundColor Gray
+    kubectl label namespace $NAMESPACE app.kubernetes.io/managed-by=Helm --overwrite 2>&1 | Out-Null
+    kubectl annotate namespace $NAMESPACE meta.helm.sh/release-name=restaurant-app --overwrite 2>&1 | Out-Null
+    kubectl annotate namespace $NAMESPACE meta.helm.sh/release-namespace=$NAMESPACE --overwrite 2>&1 | Out-Null
+    
+    # Acum instalăm, spunându-i chart-ului să NU mai încerce să creeze namespace-ul
+    Write-Host "3. Rulez helm install..." -ForegroundColor Yellow
+    helm install restaurant-app . -n $NAMESPACE --set namespace.create=false
+    
 } else {
     Write-Host "Upgrade Helm chart..." -ForegroundColor Yellow
-    helm upgrade restaurant-app . -n $NAMESPACE
+    helm upgrade restaurant-app . -n $NAMESPACE --set namespace.create=false
 }
 
 if ($LASTEXITCODE -ne 0) {
@@ -200,18 +208,13 @@ Write-Host ""
 
 # 5. Așteaptă ca pod-urile să pornească
 Write-Host "=== [5/5] Așteptare pod-uri să pornească ===" -ForegroundColor Green
-Write-Host "MongoDB necesită ~90 secunde..." -ForegroundColor Yellow
-Write-Host "Kafka necesită ~60 secunde..." -ForegroundColor Yellow
-Write-Host "Prometheus și Grafana necesită ~30 secunde..." -ForegroundColor Yellow
-Write-Host ""
-
-Write-Host "Aștept inițial 30 secunde..." -ForegroundColor Yellow
-Start-Sleep -Seconds 30
+Write-Host "Aștept inițial 15 secunde..." -ForegroundColor Yellow
+Start-Sleep -Seconds 15
 
 # Verifică statusul periodic
-$maxWait = 240
-$elapsed = 30
-$checkInterval = 20
+$maxWait = 300
+$elapsed = 15
+$checkInterval = 15
 
 while ($elapsed -lt $maxWait) {
     Write-Host ""
@@ -248,9 +251,6 @@ Write-Host ""
 
 # Informații despre accesare
 Write-Host "=== Informații Accesare ===" -ForegroundColor Green
-Write-Host ""
-
-# Obține Node IP
 $nodeIP = kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type=="InternalIP")].value}' 2>&1
 if ($LASTEXITCODE -eq 0 -and $nodeIP) {
     Write-Host "Servicii disponibile prin NodePort (IP: $nodeIP):" -ForegroundColor Cyan
@@ -267,10 +267,4 @@ if ($LASTEXITCODE -eq 0 -and $nodeIP) {
 }
 
 Write-Host ""
-Write-Host "Pentru port-forward (recomandat pentru local):" -ForegroundColor Cyan
-Write-Host "  .\scripts\port-forward-services.ps1" -ForegroundColor Yellow
-Write-Host ""
-Write-Host "Documentație completă: .\MONITORING.md" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "=== Install Complet! ===" -ForegroundColor Green
-
+Write-Host '=== Install Complet! ===' -ForegroundColor Green
