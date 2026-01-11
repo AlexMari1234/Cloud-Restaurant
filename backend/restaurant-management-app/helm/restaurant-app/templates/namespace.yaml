@@ -5,6 +5,12 @@ metadata:
   name: {{ .Values.namespace.name }}
   labels:
     name: {{ .Values.namespace.name }}
+    {{- include "restaurant-app.labels" . | nindent 4 }}
+  annotations:
+    {{- if .Release.Name }}
+    meta.helm.sh/release-name: {{ .Release.Name | quote }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace | quote }}
+    {{- end }}
 {{- end }}
 
 

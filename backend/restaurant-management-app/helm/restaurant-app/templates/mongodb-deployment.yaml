@@ -42,17 +42,25 @@ spec:
         resources:
           {{- toYaml .Values.mongodb.resources | nindent 10 }}
         livenessProbe:
-          tcpSocket:
-            port: 27017
-          initialDelaySeconds: 30
+          exec:
+            command:
+            - sh
+            - -c
+            - "mongosh --quiet --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")' || exit 1"
+          initialDelaySeconds: 90
           periodSeconds: 10
-          timeoutSeconds: 5
+          timeoutSeconds: 15
+          failureThreshold: 5
         readinessProbe:
-          tcpSocket:
-            port: 27017
-          initialDelaySeconds: 10
+          exec:
+            command:
+            - sh
+            - -c
+            - "mongosh --quiet --username $MONGO_INITDB_ROOT_USERNAME --password $MONGO_INITDB_ROOT_PASSWORD --authenticationDatabase admin --eval 'db.adminCommand(\"ping\")' || exit 1"
+          initialDelaySeconds: 60
           periodSeconds: 5
-          timeoutSeconds: 3
+          timeoutSeconds: 10
+          failureThreshold: 5
       volumes:
       - name: mongodb-storage
         persistentVolumeClaim:

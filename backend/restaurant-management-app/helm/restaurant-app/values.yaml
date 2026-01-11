@@ -112,6 +112,12 @@ authService:
     limits:
       memory: "512Mi"
       cpu: "500m"
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
 
 # Restaurant Service Configuration
 restaurantService:
@@ -134,6 +140,12 @@ restaurantService:
     limits:
       memory: "512Mi"
       cpu: "500m"
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
 
 # Reservations Service Configuration
 reservationsService:
@@ -156,6 +168,12 @@ reservationsService:
     limits:
       memory: "512Mi"
       cpu: "500m"
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
 
 # Menu Order Service Configuration
 menuOrderService:
@@ -178,12 +196,63 @@ menuOrderService:
     limits:
       memory: "512Mi"
       cpu: "500m"
+  autoscaling:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 70
+    targetMemoryUtilizationPercentage: 80
+
+# Prometheus Configuration
+prometheus:
+  enabled: true
+  image:
+    repository: prom/prometheus
+    tag: "v2.48.0"
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    nodePort: 30091
+  storage:
+    size: 10Gi
+    storageClass: standard  # Change to your storage class (e.g., local-path for Kind)
+  retention: 15d
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "2Gi"
+      cpu: "1000m"
+
+# Grafana Configuration
+grafana:
+  enabled: true
+  image:
+    repository: grafana/grafana
+    tag: "10.3.1"
+    pullPolicy: IfNotPresent
+  adminUser: admin
+  adminPassword: admin123
+  service:
+    type: NodePort
+    nodePort: 30300
+  storage:
+    size: 5Gi
+    storageClass: standard  # Change to your storage class (e.g., local-path for Kind)
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
 
 # Global Configuration
 global:
   dbHost: mongodb
   dbPort: "27017"
   dbUser: admin
-  kafkaBroker: "kafka:29092"
+  kafkaBroker: "kafka-cluster:29092"
 
 

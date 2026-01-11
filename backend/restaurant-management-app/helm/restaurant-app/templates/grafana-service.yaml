@@ -1,0 +1,29 @@
+{{- if .Values.grafana.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: {{ .Values.namespace.name }}
+  labels:
+    app: grafana
+    {{- include "restaurant-app.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.grafana.service.type }}
+  {{- if eq .Values.grafana.service.type "NodePort" }}
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      name: http
+      nodePort: {{ .Values.grafana.service.nodePort }}
+  {{- else }}
+  ports:
+    - port: 3000
+      targetPort: 3000
+      protocol: TCP
+      name: http
+  {{- end }}
+  selector:
+    app: grafana
+{{- end }}
+

@@ -15,7 +15,15 @@ spec:
     metadata:
       labels:
         app: auth-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.authService.port }}"
+        prometheus.io/path: "/metrics"
     spec:
+      initContainers:
+      - name: wait-for-mongodb
+        image: busybox:1.35
+        command: ['sh', '-c', 'until nc -z mongodb 27017; do echo waiting for mongodb; sleep 2; done;']
       containers:
       - name: auth-service
         image: "{{ .Values.authService.image.repository }}:{{ .Values.authService.image.tag }}"
@@ -60,14 +68,17 @@ spec:
           httpGet:
             path: /health
             port: {{ .Values.authService.port }}
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 150
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 5
         readinessProbe:
-          httpGet:
-            path: /health
+          tcpSocket:
             port: {{ .Values.authService.port }}
-          initialDelaySeconds: 10
-          periodSeconds: 5
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
       restartPolicy: Always
 ---
 apiVersion: v1

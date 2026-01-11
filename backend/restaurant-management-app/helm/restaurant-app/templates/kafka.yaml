@@ -1,70 +1,3 @@
-{{- if .Values.zookeeper.enabled }}
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: zookeeper
-  namespace: {{ .Values.namespace.name }}
-  labels:
-    app: zookeeper
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: zookeeper
-  template:
-    metadata:
-      labels:
-        app: zookeeper
-    spec:
-      containers:
-      - name: zookeeper
-        image: "{{ .Values.zookeeper.image.repository }}:{{ .Values.zookeeper.image.tag }}"
-        ports:
-        - containerPort: 2181
-          name: zookeeper
-        env:
-        - name: ZOOKEEPER_CLIENT_PORT
-          value: "2181"
-        - name: ZOOKEEPER_TICK_TIME
-          value: "2000"
-        resources:
-          {{- toYaml .Values.zookeeper.resources | nindent 10 }}
-        livenessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "nc -z localhost 2181"
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          exec:
-            command:
-            - sh
-            - -c
-            - "nc -z localhost 2181"
-          initialDelaySeconds: 10
-          periodSeconds: 5
-      restartPolicy: Always
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: zookeeper
-  namespace: {{ .Values.namespace.name }}
-  labels:
-    app: zookeeper
-spec:
-  type: ClusterIP
-  ports:
-  - port: 2181
-    targetPort: 2181
-    protocol: TCP
-    name: zookeeper
-  selector:
-    app: zookeeper
-{{- end }}
-
 {{- if .Values.kafka.enabled }}
 apiVersion: apps/v1
 kind: Deployment
@@ -86,28 +19,31 @@ spec:
       initContainers:
       - name: wait-for-zookeeper
         image: busybox:1.35
-        command: ['sh', '-c', 'until nc -z zookeeper 2181; do echo waiting for zookeeper; sleep 2; done;']
+        # --- FIX: Folosim FQDN (Full Qualified Domain Name) ---
+        # Asta rezolva eroarea 'bad address'
+        command: 
+          - 'sh'
+          - '-c'
+          - 'until nc -z zookeeper.{{ .Values.namespace.name }}.svc.cluster.local 2181; do echo waiting for zookeeper; sleep 2; done;'
       containers:
       - name: kafka
         image: "{{ .Values.kafka.image.repository }}:{{ .Values.kafka.image.tag }}"
         ports:
         - containerPort: 9092
-          name: kafka-external
+          name: kafka-ext
         - containerPort: 29092
-          name: kafka-internal
+          name: kafka-int
         env:
         - name: KAFKA_BROKER_ID
           value: "1"
         - name: KAFKA_ZOOKEEPER_CONNECT
           value: "zookeeper:2181"
+        - name: KAFKA_ADVERTISED_LISTENERS
+          value: "PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092"
         - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
           value: "PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT"
         - name: KAFKA_INTER_BROKER_LISTENER_NAME
           value: "PLAINTEXT"
-        - name: KAFKA_LISTENERS
-          value: "PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092"
-        - name: KAFKA_ADVERTISED_LISTENERS
-          value: "PLAINTEXT://kafka-cluster:29092,PLAINTEXT_HOST://kafka-cluster:9092"
         - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
           value: "1"
         - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
@@ -122,6 +58,8 @@ spec:
           value: "1"
         - name: KAFKA_DEFAULT_REPLICATION_FACTOR
           value: "1"
+        - name: KAFKA_HEAP_OPTS
+          value: "-Xmx512M -Xms512M"
         resources:
           {{- toYaml .Values.kafka.resources | nindent 10 }}
         livenessProbe:
@@ -130,16 +68,20 @@ spec:
             - sh
             - -c
             - "nc -z localhost 29092"
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
         readinessProbe:
           exec:
             command:
             - sh
             - -c
             - "nc -z localhost 29092"
-          initialDelaySeconds: 30
-          periodSeconds: 5
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 10
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -163,5 +105,3 @@ spec:
   selector:
     app: kafka
 {{- end }}
-
-
